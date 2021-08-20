@@ -12,6 +12,13 @@ public enum MarqueeDirection {
     case left2right
 }
 
+public enum MarqueeBoundary {
+    /// Keeps the content visible and uses the inner boundary for the animation.
+    case inner
+    /// Moves the content outside of the view and uses the outer boundary for the animation.
+    case outer
+}
+
 private enum MarqueeState {
     case idle
     case ready
@@ -25,6 +32,7 @@ public struct Marquee<Content> : View where Content : View {
     @Environment(\.marqueeDirection) var direction: MarqueeDirection
     @Environment(\.marqueeWhenNotFit) var stopWhenNotFit: Bool
     @Environment(\.marqueeIdleAlignment) var idleAlignment: HorizontalAlignment
+    @Environment(\.marqueeBoundary) var boundary: MarqueeBoundary
     
     private var content: () -> Content
     @State private var state: MarqueeState = .idle
@@ -116,9 +124,13 @@ public struct Marquee<Content> : View where Content : View {
                 return 0
             }
         case .ready:
-            return (direction == .right2left) ? proxy.size.width : -contentWidth
+            return (direction == .right2left)
+                ? boundary == .outer ? proxy.size.width : 0
+                : -contentWidth
         case .animating:
-            return (direction == .right2left) ? -contentWidth : proxy.size.width
+            return (direction == .right2left)
+                ? boundary == .outer ? -contentWidth : proxy.size.width - contentWidth
+                : proxy.size.width
         }
     }
     
