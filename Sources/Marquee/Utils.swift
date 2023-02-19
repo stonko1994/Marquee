@@ -177,7 +177,9 @@ public extension View {
 struct GeometryBackground: View {
     var body: some View {
         GeometryReader { geometry in
-            return Color.clear.preference(key: WidthKey.self, value: geometry.size.width)
+            return Color.clear
+                .preference(key: WidthKey.self, value: geometry.size.width)
+                .preference(key: HeightKey.self, value: geometry.size.height)
         }
     }
 }
@@ -188,6 +190,14 @@ struct WidthKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {}
 
     typealias Value = CGFloat
+}
+
+struct HeightKey: PreferenceKey {
+    typealias Value = CGFloat
+
+    static var defaultValue = CGFloat(0)
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {}
 }
 
 extension Animation {

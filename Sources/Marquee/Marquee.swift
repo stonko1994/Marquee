@@ -37,6 +37,7 @@ public struct Marquee<Content> : View where Content : View {
     private var content: () -> Content
     @State private var state: MarqueeState = .idle
     @State private var contentWidth: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
     @State private var isAppear = false
     
     public init(@ViewBuilder content: @escaping () -> Content) {
@@ -65,6 +66,9 @@ public struct Marquee<Content> : View where Content : View {
                     proxy: proxy
                 )
             })
+            .onPreferenceChange(HeightKey.self) { value in
+                self.contentHeight = value
+            }
             .onAppear {
                 self.isAppear = true
                 resetAnimation(
@@ -109,7 +113,9 @@ public struct Marquee<Content> : View where Content : View {
                     proxy: proxy
                 )
             }
-        }.clipped()
+        }
+        .frame(height: contentHeight)
+        .clipped()
     }
     
     private func offsetX(proxy: GeometryProxy) -> CGFloat {
