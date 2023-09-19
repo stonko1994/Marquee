@@ -1,10 +1,3 @@
-//
-//  Utils.swift
-//  
-//
-//  Created by CatchZeng on 2020/11/23.
-//
-
 import Foundation
 import CoreGraphics
 import SwiftUI

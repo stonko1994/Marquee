@@ -1,10 +1,3 @@
-//
-//  Marquee.swift
-//
-//
-//  Created by CatchZeng on 2020/11/23.
-//
-
 import SwiftUI
 
 public enum MarqueeDirection {
