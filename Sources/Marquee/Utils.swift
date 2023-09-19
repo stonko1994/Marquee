@@ -13,6 +13,10 @@ struct DurationKey: EnvironmentKey {
     static var defaultValue: Double = 2.0
 }
 
+struct DelayKey: EnvironmentKey {
+    static var defaultValue: Double = 3.0
+}
+
 struct AutoreversesKey: EnvironmentKey {
     static var defaultValue: Bool = false
 }
@@ -29,10 +33,19 @@ struct AlignmentKey: EnvironmentKey {
     static var defaultValue: HorizontalAlignment = .leading
 }
 
+struct BoundaryKey: EnvironmentKey {
+    static var defaultValue: MarqueeBoundary = .outer
+}
+
 extension EnvironmentValues {
     var marqueeDuration: Double {
         get {self[DurationKey.self]}
         set {self[DurationKey.self] = newValue}
+    }
+
+    var marqueeDelay: Double {
+        get {self[DelayKey.self]}
+        set {self[DelayKey.self] = newValue}
     }
     
     var marqueeAutoreverses: Bool {
@@ -54,6 +67,11 @@ extension EnvironmentValues {
         get {self[AlignmentKey.self]}
         set {self[AlignmentKey.self] = newValue}
     }
+
+    var marqueeBoundary: MarqueeBoundary {
+        get {self[BoundaryKey.self]}
+        set {self[BoundaryKey.self] = newValue}
+    }
 }
 
 public extension View {
@@ -69,6 +87,20 @@ public extension View {
     /// - Returns: A view that has the given value set in its environment.
     func marqueeDuration(_ duration: Double) -> some View {
         environment(\.marqueeDuration, duration)
+    }
+
+    /// Sets the marquee animation delay to the given value.
+    ///
+    ///     Marquee {
+    ///         Text("Hello World!")
+    ///     }.marqueeDelay(5.0)
+    ///
+    /// - Parameters:
+    ///   - delay: Animation delay, default is `3.0`.
+    ///
+    /// - Returns: A view that has the given value set in its environment.
+    func marqueeDelay(_ delay: Double) -> some View {
+        environment(\.marqueeDelay, delay)
     }
     
     /// Sets the marquee animation autoreverses to the given value.
@@ -126,12 +158,28 @@ public extension View {
     func marqueeIdleAlignment(_ alignment: HorizontalAlignment) -> some View {
         environment(\.marqueeIdleAlignment, alignment)
     }
+
+    /// Sets the marquee boundaries to the given value
+    ///
+    ///     Marquee {
+    ///         Text("Hello World!")
+    ///     }.marqueeBoundary(.inner)
+    ///
+    /// - Parameters:
+    ///   - boundary: Boundary when the animation will be finished. See `MarqueeBoundary` for possible values, default is `.outer`.
+    ///
+    /// - Returns: A view that has the given value set in its environment.
+    func marqueeBoundary(_ boundary: MarqueeBoundary) -> some View {
+        environment(\.marqueeBoundary, boundary)
+    }
 }
 
 struct GeometryBackground: View {
     var body: some View {
         GeometryReader { geometry in
-            return Color.clear.preference(key: WidthKey.self, value: geometry.size.width)
+            return Color.clear
+                .preference(key: WidthKey.self, value: geometry.size.width)
+                .preference(key: HeightKey.self, value: geometry.size.height)
         }
     }
 }
@@ -139,11 +187,17 @@ struct GeometryBackground: View {
 struct WidthKey: PreferenceKey {
     static var defaultValue = CGFloat(0)
 
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {}
 
     typealias Value = CGFloat
+}
+
+struct HeightKey: PreferenceKey {
+    typealias Value = CGFloat
+
+    static var defaultValue = CGFloat(0)
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {}
 }
 
 extension Animation {
