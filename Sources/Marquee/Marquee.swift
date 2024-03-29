@@ -63,13 +63,22 @@ public struct Marquee<Content> : View where Content : View {
                 self.contentHeight = value
             }
             .onAppear {
-                self.isAppear = true
-                resetAnimation(
-                    duration: duration,
-                    delay: delay,
-                    autoreverses: autoreverses,
-                    proxy: proxy
-                )
+                // There is the possibility that `proxy.size` is `.zero` on `onAppear`. This can happen e.g.
+                // inside a `NavigationView` or within a `.sheet`. In those cases we do not want to
+                // initialize the animation yet as we need the proper width first.
+                // This use-case is handled by reacting to changes to `proxy.size.width` below.
+                guard proxy.size.width != .zero else {
+                    return
+                }
+
+                initializeAnimation(proxy: proxy)
+            }
+            .onChange(of: proxy.size.width) { newWidth in
+                guard !isAppear, newWidth != .zero else {
+                    return
+                }
+
+                initializeAnimation(proxy: proxy)
             }
             .onDisappear {
                 self.isAppear = false
@@ -110,7 +119,17 @@ public struct Marquee<Content> : View where Content : View {
         .frame(height: contentHeight)
         .clipped()
     }
-    
+
+    private func initializeAnimation(proxy: GeometryProxy) {
+        self.isAppear = true
+        resetAnimation(
+            duration: duration,
+            delay: delay,
+            autoreverses: autoreverses,
+            proxy: proxy
+        )
+    }
+
     private func offsetX(proxy: GeometryProxy) -> CGFloat {
         switch self.state {
         case .idle:
