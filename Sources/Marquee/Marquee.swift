@@ -42,25 +42,23 @@ public struct Marquee<Content> : View where Content : View {
             VStack {
                 if isAppear {
                     content()
-                        .background(GeometryBackground())
                         .fixedSize()
+                        .background(
+                            GeometryReader { contentGeometry in
+                                Color.clear
+                                    .onAppear {
+                                        updateContentSize(contentGeometry.size, proxy: proxy)
+                                    }
+                                    .onChange(of: contentGeometry.size) { size in
+                                        updateContentSize(size, proxy: proxy)
+                                    }
+                            }
+                        )
                         .myOffset(x: offsetX(proxy: proxy), y: 0)
                         .frame(maxHeight: .infinity)
                 } else {
                     Text("")
                 }
-            }
-            .onPreferenceChange(WidthKey.self, perform: { value in
-                self.contentWidth = value
-                resetAnimation(
-                    duration: duration,
-                    delay: delay,
-                    autoreverses: autoreverses,
-                    proxy: proxy
-                )
-            })
-            .onPreferenceChange(HeightKey.self) { value in
-                self.contentHeight = value
             }
             .onAppear {
                 // There is the possibility that `proxy.size` is `.zero` on `onAppear`. This can happen e.g.
@@ -74,10 +72,11 @@ public struct Marquee<Content> : View where Content : View {
                 initializeAnimation(proxy: proxy)
             }
             .onChange(of: proxy.size.width) { newWidth in
-                guard !isAppear, newWidth != .zero else {
+                guard newWidth != .zero else {
                     return
                 }
 
+                // A nonzero initial width can still be a temporary layout proposal.
                 initializeAnimation(proxy: proxy)
             }
             .onDisappear {
@@ -118,6 +117,17 @@ public struct Marquee<Content> : View where Content : View {
         }
         .frame(height: contentHeight)
         .clipped()
+    }
+
+    private func updateContentSize(_ size: CGSize, proxy: GeometryProxy) {
+        contentWidth = size.width
+        contentHeight = size.height
+        resetAnimation(
+            duration: duration,
+            delay: delay,
+            autoreverses: autoreverses,
+            proxy: proxy
+        )
     }
 
     private func initializeAnimation(proxy: GeometryProxy) {
@@ -176,7 +186,7 @@ public struct Marquee<Content> : View where Content : View {
         autoreverses: Bool,
         proxy: GeometryProxy
     ) {
-        let isNotFit = contentWidth < proxy.size.width
+        let isNotFit = contentWidth <= proxy.size.width
         if stopWhenNotFit && isNotFit {
             stopAnimation()
             return
